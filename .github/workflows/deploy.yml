@@ -31,7 +31,7 @@ jobs:
       # Base relative : le même build fonctionne sous n'importe quel chemin Pages,
       # donc un renommage du dépôt ne casse pas la démo.
       - run: npx vite build --base=./
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
         with:
           enablement: true
       - uses: actions/upload-pages-artifact@v3
