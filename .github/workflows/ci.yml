@@ -39,7 +39,7 @@ jobs:
       - name: Relais local — vérification de syntaxe
         run: node --check server.mjs
       - if: matrix.node == 22
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
