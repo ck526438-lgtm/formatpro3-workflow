@@ -12,7 +12,18 @@ anneau d'exécution sur les nœuds, panneaux à ressorts).
 Nouveauté : **publier une vraie vidéo sur 7 réseaux** — YouTube, Mastodon, Bluesky, X,
 Instagram Reels, Facebook Page et TikTok — depuis une simple URL.
 
-[![CI](https://github.com/ck526438-lgtm/formatpro3-workflow/actions/workflows/ci.yml/badge.svg)](https://github.com/ck526438-lgtm/formatpro3-workflow/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/Licence-MIT-3f6ad8)](LICENSE) ![Stack](https://img.shields.io/badge/React-19-61dafb) ![Vite](https://img.shields.io/badge/Vite-8-646cff) ![TS](https://img.shields.io/badge/TypeScript-5-3178c6)
+<p>
+  <a href="https://github.com/ck526438-lgtm/formatpro3-workflow/actions/workflows/ci.yml"><img src="https://github.com/ck526438-lgtm/formatpro3-workflow/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/ck526438-lgtm/formatpro3-workflow/actions/workflows/deploy.yml"><img src="https://github.com/ck526438-lgtm/formatpro3-workflow/actions/workflows/deploy.yml/badge.svg" alt="Déploiement" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/Licence-MIT-3f6ad8" alt="Licence MIT" /></a>
+  <img src="https://img.shields.io/badge/React-19-61dafb" alt="React 19" />
+  <img src="https://img.shields.io/badge/Vite-8-646cff" alt="Vite 8" />
+  <img src="https://img.shields.io/badge/TypeScript-7-3178c6" alt="TypeScript 7" />
+  <img src="https://img.shields.io/badge/tests-Vitest-6e9f18" alt="Tests Vitest" />
+  <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PR-bienvenues-brightgreen" alt="PR bienvenues" /></a>
+</p>
+
+**Sommaire** · [Démarrage](#démarrage) · [Fonctionnalités](#fonctionnalités) · [Publication vidéo](#publier-une-vidéo-sur-les-réseaux-catégorie-vidéo) · [Raccourcis](#raccourcis) · [Architecture](#architecture) · [Qualité & tests](#qualité--tests) · [Feuille de route](#feuille-de-route) · [Contribuer](#contribuer)
 
 ![FormatPro3 Workflow — canvas de workflow avec nœuds connectés](docs/screenshot.png)
 
@@ -36,11 +47,14 @@ Source imprimable : [docs/guide-utilisation.html](docs/guide-utilisation.html)
 
 ## Démarrage
 
+Prérequis : **Node.js 22.12+** (voir `.nvmrc`).
+
 ```bash
 npm install
 npm run dev      # http://localhost:5173
 npm run build    # build de production dans dist/
 npm start        # relais local optionnel + sert dist/ sur http://127.0.0.1:5174
+npm run check    # typage + lint + tests
 ```
 
 Le **relais local** (`server.mjs`, zéro dépendance) est facultatif : sans lui, l'app
@@ -164,6 +178,7 @@ le créer, plutôt qu'après 200 Mo de transfert.
 ## Architecture
 
 ```
+tests/                      # Tests Vitest : expressions, moteur, catalogue, modèles
 server.mjs                  # Relais local : /api/relay, /api/sheets-append, /api/video/* + sert dist/
 docs/
 ├── guide-utilisation.pdf   # Guide d'utilisation complet — 18 pages, français
@@ -228,3 +243,40 @@ poignées, exécution) est automatique.
   Vidéo, qui demande `npm start` en local (les octets transitent par Node).
 - Données 100 % locales : le flux et les identifiants sont sauvegardés dans le
   `localStorage` du navigateur. Aucun serveur distant, aucun compte, aucune télémétrie.
+
+## Qualité & tests
+
+```bash
+npm run typecheck   # TypeScript strict
+npm run lint        # oxlint
+npm test            # Vitest — 47 tests
+npm run check       # les trois à la suite (ce que lance la CI)
+```
+
+Les tests couvrent la résolution des expressions `{{ … }}`, l'ordre topologique et la détection de boucle,
+les branches `Condition` / `Aiguillage`, l'arrêt en cours d'exécution, la propagation des erreurs, les nœuds
+de données (filtrer, trier, agréger, dédoublonner, Code JS, Crypto, fusion…), les nœuds IA hors ligne, ainsi
+que la validité du catalogue (44 nœuds) et des 6 modèles. La CI les exécute sur Node 22 et 24 à chaque push
+et pull request ; le déploiement de la démo n'a lieu que s'ils passent.
+
+## Feuille de route
+
+- [ ] Déclencheur **Webhook réel** servi par le relais local (aujourd'hui : données d'exemple)
+- [ ] **Planificateur réel** (exécution cron par le relais, même onglet fermé)
+- [ ] Chiffrement optionnel des identifiants dans le `localStorage` (phrase secrète)
+- [ ] Historique des exécutions consultable et rejouable
+- [ ] Nouveaux nœuds : Airtable, WhatsApp Cloud API, Orange SMS / Wave
+- [ ] Interface multilingue (FR / EN)
+
+Une idée ? [Ouvrez une issue](https://github.com/ck526438-lgtm/formatpro3-workflow/issues/new/choose).
+
+## Contribuer
+
+Les contributions sont les bienvenues : lisez [CONTRIBUTING.md](CONTRIBUTING.md) (installation, scripts,
+ajout d'un nœud, conventions de commit) et le [code de conduite](CODE_OF_CONDUCT.md). Les failles de sécurité
+se signalent en privé — voir [SECURITY.md](SECURITY.md). Les évolutions sont listées dans
+[CHANGELOG.md](CHANGELOG.md).
+
+## Licence
+
+[MIT](LICENSE) © 2026 [ck526438-lgtm](https://github.com/ck526438-lgtm)

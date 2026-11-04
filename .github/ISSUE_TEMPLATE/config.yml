@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📕 Guide d'utilisation (PDF)
+    url: https://github.com/ck526438-lgtm/formatpro3-workflow/blob/main/docs/guide-utilisation.pdf
+    about: Installation, référence des 44 nœuds, dépannage.
+  - name: 🔒 Signaler une faille de sécurité
+    url: https://github.com/ck526438-lgtm/formatpro3-workflow/security/advisories/new
+    about: En privé, jamais dans une issue publique.

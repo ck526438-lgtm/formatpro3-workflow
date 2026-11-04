@@ -5,7 +5,7 @@ import { CATEGORIES, getDef } from '../data/catalog';
 import { useFlow } from '../store/store';
 
 function FlowEdgeInner({
-  id, source, target, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition,
+  id, source, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition,
 }: EdgeProps) {
   const active = useFlow((s) => s.activeEdges.includes(id));
   const done = useFlow((s) => Boolean(s.edgeDone[id]));

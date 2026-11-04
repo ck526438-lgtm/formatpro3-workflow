@@ -1,0 +1,22 @@
+name: ✨ Proposer une fonctionnalité
+description: Un nouveau nœud, une intégration ou une amélioration
+labels: [amélioration]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Quel besoin ?
+      description: Le problème que vous cherchez à résoudre.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solution proposée
+      description: Nœud, paramètres, API concernée (lien vers sa documentation)…
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives envisagées

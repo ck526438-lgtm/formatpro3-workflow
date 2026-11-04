@@ -1,0 +1,50 @@
+name: 🐛 Signaler un bug
+description: Quelque chose ne fonctionne pas comme prévu
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Merci de prendre le temps de signaler ce problème. **Ne collez jamais de clé API ou de jeton.**
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Que se passe-t-il ?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Étapes pour reproduire
+      placeholder: |
+        1. Ajouter le nœud « … »
+        2. Configurer « … »
+        3. Exécuter
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Résultat attendu
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Message d'erreur / journal d'exécution
+      render: text
+  - type: dropdown
+    id: where
+    attributes:
+      label: Environnement
+      options:
+        - Démo en ligne (GitHub Pages)
+        - Installation locale sans relais
+        - Installation locale avec relais (npm start)
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Navigateur et système
+      placeholder: Chrome 131 / Windows 11
