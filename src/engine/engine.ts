@@ -1,6 +1,6 @@
 import { getDef } from '../data/catalog';
-import type { FlowNode, FlowNodeData, Item, RunRecord } from '../types';
-import { defaultCtx, resolveDeep, resolveString, type ExprContext } from './expressions';
+import type { FlowNode, Item, RunRecord } from '../types';
+import { resolveDeep, resolveString, type ExprContext } from './expressions';
 import { hasRelay, relayFetch } from './relay';
 import { runVideoNode } from './video';
 
@@ -207,7 +207,6 @@ async function runNodeCore(
   byLabel: Record<string, Item[]>,
   creds?: Record<string, string>,
 ): Promise<Item[][]> {
-  const def = getDef(node.data.defType);
   const ctx: ExprContext = { json: firstInput(input), index: 0, items: input, byLabel, now: new Date(), creds };
   const P = (key: string, fallback: unknown = '') => param(node, key, fallback);
 
@@ -322,7 +321,7 @@ async function runNodeCore(
         const c: ExprContext = { ...ctx, json: input[i], index: i };
         const resolved = resolveAll(node, c);
         const url = String(resolved.webhookUrl ?? '').trim();
-        if (!/^https:\/\/hooks\.slack\.com\/services\//.test(url)) {
+        if (!url.startsWith('https://hooks.slack.com/services/')) {
           throw new Error('URL de webhook Slack invalide — api.slack.com/messaging/webhooks → « Copy webhook URL ».');
         }
         const r = await relayFetch(url, {

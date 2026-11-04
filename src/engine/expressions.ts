@@ -69,7 +69,9 @@ export function evalExpression(expr: string, ctx: ExprContext): unknown {
 /** Remplace les `{{ expressions }}` contenues dans une chaîne. */
 export function resolveString(value: string, ctx: ExprContext): unknown {
   if (!value.includes('{{')) return value;
-  const exact = value.trim().match(/^\{\{([\s\S]+)\}\}$/);
+  // Une seule expression qui occupe toute la chaîne → on garde le type (nombre, objet…).
+  // Sans « }} » interne, sinon « {{ a }} et {{ b }} » serait pris pour une seule expression.
+  const exact = value.trim().match(/^\{\{((?:(?!\}\})[\s\S])+)\}\}$/);
   if (exact) {
     const result = evalExpression(exact[1].trim(), ctx);
     return result === undefined ? value : result;
