@@ -23,7 +23,7 @@ Instagram Reels, Facebook Page et TikTok — depuis une simple URL.
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PR-bienvenues-brightgreen" alt="PR bienvenues" /></a>
 </p>
 
-**Sommaire** · [Démarrage](#démarrage) · [Fonctionnalités](#fonctionnalités) · [Publication vidéo](#publier-une-vidéo-sur-les-réseaux-catégorie-vidéo) · [Raccourcis](#raccourcis) · [Architecture](#architecture) · [Qualité & tests](#qualité--tests) · [Feuille de route](#feuille-de-route) · [Contribuer](#contribuer)
+**Sommaire** · [Démarrage](#démarrage) · [Applications](#applications-windows-macos-linux-android-ios) · [Fonctionnalités](#fonctionnalités) · [Publication vidéo](#publier-une-vidéo-sur-les-réseaux-catégorie-vidéo) · [Raccourcis](#raccourcis) · [Architecture](#architecture) · [Qualité & tests](#qualité--tests) · [Feuille de route](#feuille-de-route) · [Contribuer](#contribuer)
 
 ![FormatPro3 Workflow — canvas de workflow avec nœuds connectés](docs/screenshot.png)
 
@@ -63,6 +63,41 @@ appels navigateur (CORS) — Slack, Google Sheets, n'importe quelle API fermée 
 nœud Requête HTTP — en les appelant depuis Node, en local uniquement (127.0.0.1).
 Il est en revanche **obligatoire pour la catégorie Vidéo** : c'est lui qui télécharge
 les octets depuis leur URL et les envoie aux plateformes.
+
+## Applications (Windows, macOS, Linux, Android, iOS)
+
+| Système | Format | Où le trouver |
+| --- | --- | --- |
+| **Windows** 10/11 (x64, ARM64) | Installateur `.exe` (NSIS) ou version **portable** `.exe` sans installation | [Releases](https://github.com/ck526438-lgtm/formatpro3-workflow/releases) |
+| **macOS** 11+ (Intel et Apple Silicon) | `.dmg` (glisser dans Applications) ou `.zip` | [Releases](https://github.com/ck526438-lgtm/formatpro3-workflow/releases) |
+| **Linux** (x64) | `.AppImage` (toutes distributions) ou `.deb` (Debian, Ubuntu, Mint, Kali…) | [Releases](https://github.com/ck526438-lgtm/formatpro3-workflow/releases) |
+| **Android / iOS / ChromeOS** | Application installable (PWA) depuis la démo en ligne | [Démo](https://ck526438-lgtm.github.io/formatpro3-workflow/) → menu du navigateur → « Installer l'application » / « Sur l'écran d'accueil » |
+
+**Les applications de bureau embarquent le relais local** : il démarre tout seul avec la fenêtre
+(sur `127.0.0.1`, port 51740), donc Slack, Google Sheets, les API fermées CORS **et toute la catégorie
+Vidéo** fonctionnent sans `npm start` ni Node.js installé. Les flux et identifiants restent sur la machine.
+
+La version installable mobile (PWA) fonctionne hors ligne une fois ouverte, mais comme la démo web elle
+n'a pas de relais : la catégorie Vidéo et les API bloquées par CORS demandent l'app de bureau.
+
+> **Premier lancement** — les installateurs ne sont pas encore signés numériquement :
+> - Windows : « Windows a protégé votre ordinateur » → **Informations complémentaires** → **Exécuter quand même** ;
+> - macOS : clic droit sur l'app → **Ouvrir** → **Ouvrir** (une seule fois) ;
+> - Linux AppImage : `chmod +x FormatPro3-Workflow-*.AppImage` puis double-clic.
+
+### Construire les applications soi-même
+
+```bash
+npm run desktop      # build + lance l'app de bureau en local
+npm run dist:win     # → release/*.exe   (à lancer sous Windows)
+npm run dist:mac     # → release/*.dmg   (à lancer sous macOS)
+npm run dist:linux   # → release/*.AppImage + *.deb
+```
+
+Chaque système se construit sur lui-même : c'est le workflow
+[`release.yml`](.github/workflows/release.yml) qui s'en charge sur les trois à la fois. Pour publier
+une version : `git tag v1.2.0 && git push origin v1.2.0` → une Release GitHub apparaît avec tous les
+installateurs (ou onglet **Actions → Applications de bureau → Run workflow** pour un essai sans Release).
 
 ## Fonctionnalités
 
@@ -180,6 +215,9 @@ le créer, plutôt qu'après 200 Mo de transfert.
 ```
 tests/                      # Tests Vitest : expressions, moteur, catalogue, modèles
 server.mjs                  # Relais local : /api/relay, /api/sheets-append, /api/video/* + sert dist/
+electron/main.mjs           # App de bureau : démarre le relais puis ouvre la fenêtre (menus en français)
+build/icon.png              # Icône des applications (convertie en .ico / .icns au packaging)
+public/                     # manifest.webmanifest, sw.js et icônes de la version installable (PWA)
 docs/
 ├── guide-utilisation.pdf   # Guide d'utilisation complet — 18 pages, français
 ├── guide-utilisation.html  # Sa source imprimable (rendu Edge/Chrome --print-to-pdf)
@@ -249,7 +287,7 @@ poignées, exécution) est automatique.
 ```bash
 npm run typecheck   # TypeScript strict
 npm run lint        # oxlint
-npm test            # Vitest — 47 tests
+npm test            # Vitest — 51 tests
 npm run check       # les trois à la suite (ce que lance la CI)
 ```
 

@@ -1,0 +1,70 @@
+name: Applications de bureau
+
+# Construit les installateurs Windows, macOS et Linux.
+# - Sur un tag « v* » (ex. v1.2.0) : publie une Release GitHub avec tous les fichiers.
+# - À la main (onglet Actions → « Run workflow ») : fichiers disponibles en artefacts, sans Release.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, name: Windows, script: 'dist:win' }
+          - { os: macos-latest, name: macOS, script: 'dist:mac' }
+          - { os: ubuntu-latest, name: Linux, script: 'dist:linux' }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Construire les installateurs
+        run: npm run ${{ matrix.script }}
+        env:
+          # Pas de certificat de signature : electron-builder ne cherche pas d'identité.
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: formatpro3-${{ matrix.name }}
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            release/*.exe
+            release/*.dmg
+            release/*.zip
+            release/*.AppImage
+            release/*.deb
+
+  publish:
+    name: Publier la Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: FormatPro3 Workflow ${{ github.ref_name }}
+          generate_release_notes: true
+          files: out/*

@@ -7,10 +7,10 @@ import http from 'node:http';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DIST = path.join(__dirname, 'dist');
+const DEFAULT_DIST = path.join(__dirname, 'dist');
 const PORT = Number(process.env.PORT || 5174);
 const HOST = '127.0.0.1';
 const MAX_BODY = 5 * 1024 * 1024;
@@ -29,6 +29,10 @@ const MIME = {
   '.png': 'image/png',
   '.ico': 'image/x-icon',
   '.woff2': 'font/woff2',
+  '.webmanifest': 'application/manifest+json',
+  '.webp': 'image/webp',
+  '.jpg': 'image/jpeg',
+  '.pdf': 'application/pdf',
 };
 
 function readBody(req) {
@@ -379,17 +383,35 @@ async function handleApi(req, res) {
   return sendJson(res, 404, { error: 'Route inconnue' });
 }
 
-function serveStatic(res, pathname) {
-  const rel = pathname === '/' ? '/index.html' : pathname;
-  const file = path.normalize(path.join(DIST, rel));
-  if (!file.startsWith(DIST)) {
+// Les routes /api ne répondent qu'aux pages servies en local (127.0.0.1 / localhost).
+// Empêche un site ouvert dans le navigateur d'utiliser le relais à votre insu.
+function isLocalOrigin(origin) {
+  if (!origin) return true;
+  try {
+    const { protocol, hostname } = new URL(origin);
+    return protocol === 'http:' && (hostname === '127.0.0.1' || hostname === 'localhost');
+  } catch {
+    return false;
+  }
+}
+
+function serveStatic(res, dist, pathname) {
+  let rel;
+  try {
+    rel = decodeURIComponent(pathname === '/' ? '/index.html' : pathname);
+  } catch {
+    res.writeHead(400);
+    return res.end('Requête invalide');
+  }
+  const file = path.normalize(path.join(dist, rel));
+  if (file !== dist && !file.startsWith(dist + path.sep)) {
     res.writeHead(403);
     return res.end('Interdit');
   }
   fs.readFile(file, (err, data) => {
     if (err) {
       // Fallback SPA : toute route inconnue renvoie index.html.
-      fs.readFile(path.join(DIST, 'index.html'), (err2, index) => {
+      fs.readFile(path.join(dist, 'index.html'), (err2, index) => {
         if (err2) {
           res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
           return res.end('Build introuvable — lancez « npm run build » puis relancez « npm start ».');
@@ -404,25 +426,58 @@ function serveStatic(res, pathname) {
   });
 }
 
-const server = http.createServer((req, res) => {
-  void (async () => {
-    try {
-      if (req.url?.startsWith('/api/')) return await handleApi(req, res);
-      if (req.method !== 'GET' && req.method !== 'HEAD') {
-        res.writeHead(405);
-        return res.end();
+export function createServer({ dist = DEFAULT_DIST } = {}) {
+  const root = path.resolve(dist);
+  return http.createServer((req, res) => {
+    void (async () => {
+      try {
+        const pathname = new URL(req.url ?? '/', 'http://127.0.0.1').pathname;
+        if (pathname.startsWith('/api/')) {
+          if (!isLocalOrigin(req.headers.origin)) {
+            return sendJson(res, 403, { error: 'Origine refusée : le relais ne sert que l’application locale.' });
+          }
+          return await handleApi(req, res);
+        }
+        if (req.method !== 'GET' && req.method !== 'HEAD') {
+          res.writeHead(405);
+          return res.end();
+        }
+        return serveStatic(res, root, pathname);
+      } catch (e) {
+        return sendJson(res, 500, { error: e instanceof Error ? e.message : 'Erreur interne' });
       }
-      return serveStatic(res, req.url ?? '/');
-    } catch (e) {
-      return sendJson(res, 500, { error: e instanceof Error ? e.message : 'Erreur interne' });
-    }
-  })();
-});
+    })();
+  });
+}
 
-server.listen(PORT, HOST, () => {
-  console.log(`⚡ FormatPro3 Workflow relais local sur http://${HOST}:${PORT}`);
-  console.log('   /api/relay         → transfère les appels bloqués par CORS (Slack, etc.)');
-  console.log('   /api/sheets-append → Google Sheets via compte de service');
-  console.log('   /api/video/*       → récupère une vidéo par URL et l’upload (YouTube, X, Mastodon, Bluesky…)');
-  console.log('   dist/ servi en statique (lancez « npm run build » pour la prod)');
-});
+// Démarre le relais et résout avec { server, port, url }.
+// port = 0 → port libre choisi par le système.
+export function startServer({ port = PORT, host = HOST, dist = DEFAULT_DIST } = {}) {
+  const server = createServer({ dist });
+  return new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(port, host, () => {
+      server.off('error', reject);
+      const addr = server.address();
+      const actual = typeof addr === 'object' && addr ? addr.port : port;
+      resolve({ server, port: actual, url: `http://${host}:${actual}` });
+    });
+  });
+}
+
+// Lancement direct : `npm start` / `node server.mjs`.
+const isMain = process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
+if (isMain) {
+  startServer()
+    .then(({ url }) => {
+      console.log(`⚡ FormatPro3 Workflow relais local sur ${url}`);
+      console.log('   /api/relay         → transfère les appels bloqués par CORS (Slack, etc.)');
+      console.log('   /api/sheets-append → Google Sheets via compte de service');
+      console.log('   /api/video/*       → récupère une vidéo par URL et l’upload (YouTube, X, Mastodon, Bluesky…)');
+      console.log('   dist/ servi en statique (lancez « npm run build » pour la prod)');
+    })
+    .catch((e) => {
+      console.error(`Impossible de démarrer le relais : ${e.message}`);
+      process.exit(1);
+    });
+}
