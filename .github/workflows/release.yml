@@ -41,7 +41,7 @@ jobs:
           # Pas de certificat de signature : electron-builder ne cherche pas d'identité.
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: formatpro3-${{ matrix.name }}
           if-no-files-found: error
