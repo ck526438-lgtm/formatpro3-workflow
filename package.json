@@ -1,7 +1,7 @@
 {
   "name": "formatpro3-workflow",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "FormatPro3 Workflow — Automatisation visuelle de workflows",
   "keywords": [
     "workflow",
@@ -11,7 +11,10 @@
     "react",
     "react-flow",
     "vite",
-    "typescript"
+    "typescript",
+    "electron",
+    "desktop",
+    "pwa"
   ],
   "homepage": "https://ck526438-lgtm.github.io/formatpro3-workflow/",
   "bugs": {
@@ -35,7 +38,11 @@
     "lint": "oxlint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "npm run typecheck && npm run lint && npm run test"
+    "check": "npm run typecheck && npm run lint && npm run test",
+    "desktop": "npm run build && electron .",
+    "dist:win": "npm run build && electron-builder --win --publish never",
+    "dist:mac": "npm run build && electron-builder --mac --publish never",
+    "dist:linux": "npm run build && electron-builder --linux --publish never"
   },
   "dependencies": {
     "@xyflow/react": "^12.12.0",
@@ -53,10 +60,108 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
+    "electron": "^45.3.0",
+    "electron-builder": "^26.18.0",
     "oxlint": "^1.91.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
     "vitest": "^5.1.0"
-  }
+  },
+  "author": {
+    "name": "ck526438-lgtm",
+    "url": "https://github.com/ck526438-lgtm"
+  },
+  "main": "electron/main.mjs",
+  "build": {
+    "appId": "com.formatpro3.workflow",
+    "productName": "FormatPro3 Workflow",
+    "copyright": "© 2026 ck526438-lgtm — MIT",
+    "artifactName": "FormatPro3-Workflow-${version}-${os}-${arch}.${ext}",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "server.mjs",
+      "build/icon.png",
+      "package.json",
+      "!node_modules/**/*"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "portable": {
+      "artifactName": "FormatPro3-Workflow-${version}-portable.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "FormatPro3 Workflow",
+      "language": "1036"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.png"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "category": "Development",
+      "icon": "build/icon.png",
+      "maintainer": "ck526438-lgtm",
+      "synopsis": "Automatisation visuelle de workflows",
+      "syncDesktopName": true
+    }
+  },
+  "desktopName": "formatpro3-workflow.desktop"
 }
