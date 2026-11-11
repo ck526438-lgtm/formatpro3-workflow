@@ -97,7 +97,8 @@ npm run dist:linux   # → release/*.AppImage + *.deb
 Chaque système se construit sur lui-même : c'est le workflow
 [`release.yml`](.github/workflows/release.yml) qui s'en charge sur les trois à la fois. Pour publier
 une version : `git tag v1.2.0 && git push origin v1.2.0` → une Release GitHub apparaît avec tous les
-installateurs (ou onglet **Actions → Applications de bureau → Run workflow** pour un essai sans Release).
+installateurs. Sans tag : onglet **Actions → Applications de bureau → Run workflow**, case « publier »
+cochée pour créer la Release `v<version de package.json>`, décochée pour un simple essai.
 
 ## Fonctionnalités
 
