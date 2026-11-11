@@ -2,12 +2,18 @@ name: Applications de bureau
 
 # Construit les installateurs Windows, macOS et Linux.
 # - Sur un tag « v* » (ex. v1.2.0) : publie une Release GitHub avec tous les fichiers.
-# - À la main (onglet Actions → « Run workflow ») : fichiers disponibles en artefacts, sans Release.
+# - À la main (onglet Actions → « Run workflow ») : artefacts seuls, ou Release si on coche
+#   « publier » (le tag v<version de package.json> est alors créé par le workflow).
 
 on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      publier:
+        description: 'Publier une Release (tag v<version de package.json>)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -56,15 +62,41 @@ jobs:
   publish:
     name: Publier la Release
     needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.publier
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - id: tag
+        name: Déterminer le tag
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            echo "name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=v$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/download-artifact@v4
         with:
           path: out
           merge-multiple: true
       - uses: softprops/action-gh-release@v2
         with:
-          name: FormatPro3 Workflow ${{ github.ref_name }}
+          tag_name: ${{ steps.tag.outputs.name }}
+          target_commitish: ${{ github.sha }}
+          name: FormatPro3 Workflow ${{ steps.tag.outputs.name }}
           generate_release_notes: true
           files: out/*
+          body: |
+            ## Télécharger
+            | Système | Fichier |
+            | --- | --- |
+            | Windows (installateur) | `FormatPro3-Workflow-*-win-x64.exe` (ARM : `-win-arm64.exe`) |
+            | Windows (portable, sans installation) | `FormatPro3-Workflow-*-portable.exe` |
+            | macOS Apple Silicon (M1–M4) | `FormatPro3-Workflow-*-mac-arm64.dmg` |
+            | macOS Intel | `FormatPro3-Workflow-*-mac-x64.dmg` |
+            | Linux (toutes distributions) | `FormatPro3-Workflow-*-linux-x86_64.AppImage` |
+            | Debian / Ubuntu / Kali | `FormatPro3-Workflow-*-linux-amd64.deb` |
+            | Android / iOS | [Démo en ligne](https://ck526438-lgtm.github.io/formatpro3-workflow/) → « Installer l'application » |
+
+            Premier lancement (installateurs non signés) — Windows : « Informations complémentaires » → « Exécuter quand même ».
+            macOS : clic droit sur l'app → « Ouvrir ».
